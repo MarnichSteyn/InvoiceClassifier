@@ -1,0 +1,69 @@
+# Datasets and prepared data — never commit these
+prepared_data/
+prepared_data_full/
+data/
+*.json.gz
+
+# Model checkpoints — too large for git, store separately
+checkpoints/
+*.safetensors
+*.bin
+*.pt
+*.pth
+
+# Training artifacts
+training*.log
+demo_outputs/
+triage_results.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# HuggingFace cache (sometimes leaks into project dir)
+.cache/
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environment-specific
+.env
+*.local
