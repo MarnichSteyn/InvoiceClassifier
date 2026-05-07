@@ -87,6 +87,56 @@ def ocr_pdf_or_image(path: Path) -> list[dict]:
     return words
 
 
+def load_colleague_ocr(path: Path) -> list[dict]:
+    """Load OCR JSON produced by the colleague's pipeline (PaddleOCR + pymupdf).
+
+    Returns word list in our internal format:
+      [{"text": str, "bbox": [x1, y1, x2, y2], "page": int, "confidence": float}, ...]
+
+    Bboxes are converted to [x1, y1, x2, y2] in 0-1000 integer scale (LayoutLM format).
+    Confidences are normalised to 0-1.
+    Only WORD blocks are included; LINE blocks are skipped.
+    Pages are converted from 1-indexed (his) to 0-indexed (DocILE convention).
+    """
+    import json
+
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    words: list[dict] = []
+    for page in data.get("pages", []):
+        page_idx = page["page_number"] - 1
+        for block in page.get("blocks", []):
+            if block.get("block_type") != "WORD":
+                continue
+            text = (block.get("text") or "").strip()
+            if not text:
+                continue
+            b = block["bbox"]
+            left = b["left"]
+            top = b["top"]
+            w = b["width"]
+            h = b["height"]
+            if w <= 0 or h <= 0:
+                continue
+            x1 = min(1000, max(0, int(round(left * 1000))))
+            y1 = min(1000, max(0, int(round(top * 1000))))
+            x2 = min(1000, max(0, int(round((left + w) * 1000))))
+            y2 = min(1000, max(0, int(round((top + h) * 1000))))
+            if x1 >= x2 or y1 >= y2:
+                continue
+            confidence = float(block.get("confidence", 100.0)) / 100.0
+            words.append(
+                {
+                    "text": text,
+                    "bbox": [x1, y1, x2, y2],
+                    "page": page_idx,
+                    "confidence": confidence,
+                }
+            )
+    return words
+
+
 def load_docile_ocr(path: Path) -> list[dict]:
     """Load pre-computed DocILE OCR JSON. Returns word list in internal format."""
     from invoice_extractor.data.docile_loader import load_ocr_words
